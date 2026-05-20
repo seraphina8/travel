@@ -250,6 +250,7 @@ const recommendScenics = ref([]);
 const banners = ref([]);
 const currentBanner = ref(0);
 let bannerTimer = null;
+const recommendCacheMinutes = 10;
 const defaultImage =
   "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400";
 const defaultBannerBg =
@@ -289,6 +290,10 @@ const nextBanner = () => {
 };
 
 const startBannerTimer = () => {
+  if (bannerTimer) {
+    clearInterval(bannerTimer);
+    bannerTimer = null;
+  }
   if (banners.value.length > 1) {
     bannerTimer = setInterval(() => {
       nextBanner();
@@ -304,15 +309,59 @@ const handleSearch = () => {
   }
 };
 
+const getRecommendCacheKey = () => {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  return `home_recommend_scenics_${user.id || "guest"}`;
+};
+
+const getCachedRecommendScenics = () => {
+  try {
+    const cacheKey = getRecommendCacheKey();
+    const raw = sessionStorage.getItem(cacheKey);
+    if (!raw) return null;
+    const cache = JSON.parse(raw);
+    const maxAge = recommendCacheMinutes * 60 * 1000;
+    if (!cache.time || Date.now() - cache.time > maxAge) {
+      sessionStorage.removeItem(cacheKey);
+      return null;
+    }
+    return Array.isArray(cache.data) ? cache.data : null;
+  } catch (e) {
+    return null;
+  }
+};
+
+const setCachedRecommendScenics = (data) => {
+  try {
+    sessionStorage.setItem(
+      getRecommendCacheKey(),
+      JSON.stringify({ time: Date.now(), data }),
+    );
+  } catch (e) {}
+};
+
 const loadData = async () => {
   try {
-    const [scenicRes, strategyRes, recommendRes, bannerRes] = await Promise.all(
-      [
-        api.getScenicList({ pageNum: 1, pageSize: 8 }),
-        api.getStrategyList({ pageNum: 1, pageSize: 4, status: 1 }),
-        api.getRecommendScenics(4),
-        api.getActiveBanners(),
-      ],
+    if (bannerTimer) {
+      clearInterval(bannerTimer);
+      bannerTimer = null;
+    }
+    const cachedRecommend = getCachedRecommendScenics();
+    if (cachedRecommend) {
+      recommendScenics.value = cachedRecommend;
+    }
+
+    const requests = [
+      api.getScenicList({ pageNum: 1, pageSize: 8 }),
+      api.getStrategyList({ pageNum: 1, pageSize: 4, status: 1 }),
+      api.getActiveBanners(),
+    ];
+    if (!cachedRecommend) {
+      requests.push(api.getRecommendScenics(4));
+    }
+
+    const [scenicRes, strategyRes, bannerRes, recommendRes] = await Promise.all(
+      requests,
     );
     if (scenicRes.code === 200) {
       hotScenics.value = scenicRes.data.records;
@@ -320,12 +369,13 @@ const loadData = async () => {
     if (strategyRes.code === 200) {
       hotStrategies.value = strategyRes.data.records;
     }
-    if (recommendRes.code === 200 && recommendRes.data) {
-      recommendScenics.value = recommendRes.data;
-    }
     if (bannerRes.code === 200 && bannerRes.data) {
       banners.value = bannerRes.data;
       startBannerTimer();
+    }
+    if (recommendRes?.code === 200 && recommendRes.data) {
+      recommendScenics.value = recommendRes.data;
+      setCachedRecommendScenics(recommendRes.data);
     }
   } catch (e) {
     console.error("加载数据失败", e);

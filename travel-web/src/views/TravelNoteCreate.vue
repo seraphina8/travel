@@ -61,8 +61,32 @@
               </div>
 
               <div class="form-group">
+                <label class="form-label">游记图片</label>
+                <div class="image-upload-box" @click="triggerImageUpload">
+                  <i class="bi bi-cloud-upload"></i>
+                  <span>点击上传图片</span>
+                </div>
+                <input ref="imageInputRef" type="file" accept="image/*" multiple @change="handleImageSelect" hidden />
+                <div class="image-preview-grid" v-if="noteImages.length">
+                  <div class="image-preview-item" v-for="(img, index) in noteImages" :key="img">
+                    <img :src="img" alt="游记图片" />
+                    <button type="button" class="image-remove" @click="removeImage(index)">
+                      <i class="bi bi-x"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
                 <label class="form-label">游记正文 *</label>
-                <div class="editor-toolbar">
+                <textarea
+                  v-model.trim="form.content"
+                  class="form-control note-textarea"
+                  rows="12"
+                  placeholder="写下你的旅行故事、路线体验、注意事项和推荐理由..."
+                  required
+                ></textarea>
+                <div v-if="false" class="editor-toolbar">
                   <button type="button" class="toolbar-btn" @click="formatText('bold')" title="加粗">
                     <i class="bi bi-type-bold"></i>
                   </button>
@@ -78,6 +102,7 @@
                   <input ref="imageInputRef" type="file" accept="image/*" @change="handleImageSelect" hidden />
                 </div>
                 <div
+                  v-if="false"
                   ref="editorRef"
                   class="rich-editor"
                   contenteditable="true"
@@ -123,6 +148,7 @@ const submitting = ref(false)
 const tags = ref([])
 const selectedTags = ref([])
 const customTags = ref('')
+const noteImages = ref([])
 const editorRef = ref(null)
 const imageInputRef = ref(null)
 const savedRange = ref(null)
@@ -226,20 +252,29 @@ const onEditorPaste = async (event) => {
 }
 
 const triggerImageUpload = () => {
-  saveEditorSelection()
   imageInputRef.value?.click()
 }
 
 const handleImageSelect = async (event) => {
-  const file = event.target.files?.[0]
-  if (file) {
-    await uploadAndInsertImage(file)
+  const files = Array.from(event.target.files || [])
+  for (const file of files) {
+    const res = await api.uploadFile(file)
+    if (res.code === 200) {
+      noteImages.value.push(res.data)
+    } else {
+      alert(res.message || '图片上传失败')
+    }
   }
   event.target.value = ''
 }
 
+const removeImage = (index) => {
+  noteImages.value.splice(index, 1)
+}
+
 const resetForm = () => {
   form.value = { title: '', province: '', content: '' }
+  noteImages.value = []
   selectedTags.value = []
   customTags.value = ''
   if (editorRef.value) {
@@ -255,15 +290,14 @@ const submitNote = async () => {
 
   submitting.value = true
   try {
-    onEditorInput()
     const res = await api.createTravelNote({
       ...form.value,
       tags: mergedTags.value,
-      images: JSON.stringify(getContentImages())
+      images: JSON.stringify(noteImages.value)
     })
     if (res.code === 200) {
       alert('发布成功')
-      router.push('/note')
+      router.push('/user?tab=publish')
     } else {
       alert(res.message || '发布失败')
     }
@@ -368,6 +402,60 @@ onMounted(() => {
   background: #5a9bcf;
   border-color: #5a9bcf;
   color: #fff;
+}
+
+.image-upload-box {
+  border: 1px dashed #cfd8e3;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #f9fbfd;
+  color: #607080;
+  cursor: pointer;
+}
+
+.image-upload-box i {
+  color: #5a9bcf;
+  font-size: 30px;
+}
+
+.image-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.image-preview-item {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.image-preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+}
+
+.note-textarea {
+  resize: vertical;
+  line-height: 1.7;
 }
 
 .editor-toolbar {

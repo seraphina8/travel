@@ -63,10 +63,10 @@
             <li>
               <a
                 href="#"
-                :class="{ active: activeTab === 'strategy' }"
-                @click.prevent="activeTab = 'strategy'"
+                :class="{ active: activeTab === 'publish' }"
+                @click.prevent="activeTab = 'publish'"
               >
-                <i class="bi bi-journal-text"></i> 我的攻略
+                <i class="bi bi-journal-text"></i> 我的发布
               </a>
             </li>
             <li>
@@ -246,13 +246,21 @@
                     @click="loadPasswordCaptcha"
                     title="点击刷新"
                   >
-                    <img v-if="passwordCaptcha.image" :src="passwordCaptcha.image" alt="验证码" />
+                    <img
+                      v-if="passwordCaptcha.image"
+                      :src="passwordCaptcha.image"
+                      alt="验证码"
+                    />
                     <span v-else>刷新</span>
                   </button>
                 </div>
               </div>
               <div class="form-actions">
-                <button type="submit" class="submit-btn" :disabled="passwordLoading">
+                <button
+                  type="submit"
+                  class="submit-btn"
+                  :disabled="passwordLoading"
+                >
                   {{ passwordLoading ? "提交中..." : "修改密码" }}
                 </button>
               </div>
@@ -260,20 +268,24 @@
           </form>
         </div>
 
-        <div class="content-card" v-if="activeTab === 'strategy'">
-          <h5 class="card-title">我的攻略</h5>
-          <div class="collection-list" v-if="strategies.length > 0">
+        <div class="content-card" v-if="activeTab === 'publish'">
+          <h5 class="card-title">我的发布</h5>
+          <div class="collection-list" v-if="publishedItems.length > 0">
             <div
               class="collection-item"
-              v-for="item in strategies"
-              :key="item.id"
-              @click="router.push(`/strategy/${item.id}`)"
+              v-for="item in publishedItems"
+              :key="`${item.kind}-${item.id}`"
+              @click="router.push(item.path)"
             >
               <img :src="item.coverImage || defaultImage" :alt="item.title" />
               <div class="collection-info">
                 <h6>{{ item.title }}</h6>
                 <div class="collection-meta">
-                  <span class="type-badge">{{ item.status === 1 ? "已发布" : "待审核" }}</span>
+                  <span class="type-badge">{{ item.typeName }}</span>
+                  <span class="type-badge">{{ getPublishStatusLabel(item.status) }}</span>
+                  <span class="type-badge" v-if="false">{{
+                    item.status === 1 ? "已发布" : "待审核"
+                  }}</span>
                   <small>{{ formatDate(item.createTime) }}</small>
                 </div>
               </div>
@@ -499,11 +511,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from "vue";
-import { useRouter } from "vue-router";
+import { computed, ref, onMounted, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import api from "../api";
 
 const router = useRouter();
+const route = useRoute();
 const user = ref({});
 const activeTab = ref("profile");
 const profileForm = ref({
@@ -525,6 +538,9 @@ const followList = ref([]);
 const fansList = ref([]);
 const collections = ref([]);
 const strategies = ref([]);
+const notes = ref([]);
+const foods = ref([]);
+const trips = ref([]);
 const footprints = ref([]);
 const discoverUsers = ref([]);
 const searchKeyword = ref("");
@@ -603,6 +619,108 @@ const loadStrategies = async () => {
   } catch (e) {
     console.error("加载我的攻略失败", e);
   }
+};
+
+const loadNotes = async () => {
+  try {
+    const res = await api.getMyNotes();
+    if (res.code === 200) {
+      notes.value = res.data || [];
+    }
+  } catch (e) {
+    console.error("加载我的游记失败", e);
+  }
+};
+
+const loadFoods = async () => {
+  try {
+    const res = await api.getMyFoods();
+    if (res.code === 200) {
+      foods.value = res.data || [];
+    }
+  } catch (e) {
+    console.error("加载我的美食失败", e);
+  }
+};
+
+const loadTrips = async () => {
+  try {
+    const res = await api.getMyTrips();
+    if (res.code === 200) {
+      trips.value = res.data || [];
+    }
+  } catch (e) {
+    console.error("加载我的行程失败", e);
+  }
+};
+
+const loadPublished = () => {
+  loadStrategies();
+  loadNotes();
+  loadFoods();
+  loadTrips();
+};
+
+const extractFirstImage = (html) => {
+  const match = String(html || "").match(/<img[^>]+src=["']([^"']+)["']/i);
+  return match?.[1] || "";
+};
+
+const publishedItems = computed(() =>
+  [
+    ...strategies.value.map((item) => ({
+      id: item.id,
+      kind: "strategy",
+      typeName: "攻略",
+      title: item.title,
+      status: item.status,
+      createTime: item.createTime,
+      coverImage: item.coverImage,
+      path: `/strategy/${item.id}`,
+    })),
+    ...notes.value.map((item) => ({
+      id: item.id,
+      kind: "note",
+      typeName: "游记",
+      title: item.title,
+      status: item.status ?? 1,
+      createTime: item.createTime,
+      coverImage: item.coverImage || extractFirstImage(item.content),
+      path: `/note/${item.id}`,
+    })),
+    ...foods.value.map((item) => ({
+      id: item.id,
+      kind: "food",
+      typeName: "美食",
+      title: item.name,
+      status: item.status,
+      createTime: item.createTime,
+      coverImage: item.coverImage,
+      path: `/food/${item.id}`,
+    })),
+    ...trips.value.map((item) => ({
+      id: item.id,
+      kind: "trip",
+      typeName: "行程",
+      title: item.title,
+      status: item.status,
+      createTime: item.createTime,
+      coverImage: item.coverImage,
+      path: `/trip/${item.id}`,
+    })),
+  ].sort((a, b) => new Date(b.createTime || 0) - new Date(a.createTime || 0)),
+);
+
+const getPublishStatusText = (status) => {
+  if (status === 1) return "已发布";
+  if (status === 2) return "已拒绝";
+  return "待审核";
+};
+
+const getPublishStatusLabel = (status) => {
+  if (status === 1) return "已发布";
+  if (status === 2) return "已拒绝";
+  return "待审核";
 };
 
 const cancelCollect = async (item) => {
@@ -858,7 +976,9 @@ const validatePassword = () => {
     alert("请输入原密码");
     return false;
   }
-  if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d_@#$%^&*!.-]{6,20}$/.test(newPassword)) {
+  if (
+    !/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d_@#$%^&*!.-]{6,20}$/.test(newPassword)
+  ) {
     alert("新密码应为6到20位，且至少包含字母和数字");
     return false;
   }
@@ -906,7 +1026,7 @@ watch(activeTab, (newTab) => {
   if (newTab === "follow") loadFollowList();
   if (newTab === "fans") loadFansList();
   if (newTab === "collect") loadCollections();
-  if (newTab === "strategy") loadStrategies();
+  if (newTab === "publish") loadPublished();
   if (newTab === "footprint") loadFootprints();
   if (newTab === "discover") loadRecommendUsers();
   if (newTab === "password") loadPasswordCaptcha();
@@ -915,6 +1035,10 @@ watch(activeTab, (newTab) => {
 onMounted(() => {
   loadUser();
   loadFollowCount();
+  if (route.query.tab === "publish") {
+    activeTab.value = "publish";
+    loadPublished();
+  }
 });
 </script>
 
