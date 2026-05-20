@@ -1,0 +1,46 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/travel?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf8
+    username: root
+    password: 123456789Phy
+
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+
+# MyBatis-Plus 配置（ORM框架）
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.travel.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# 高德地图配置
+amap:
+  key:a8e876f582faea150ecd701a9c5dce19
+
+# JWT配置
+jwt:
+  secret: travel-platform-secret-key-2024-secure-token-256bit
+#  过期时间（24小时，单位毫秒）
+  expiration: 86400000
+
+# 文件上传相对路径
+file:
+  upload-path: /uploads/
+
+# 支付宝沙箱支付配置
+alipay:
+  app-id: "9021000162646195"
+  private-key: MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCKAujShs2yzfk3bj4IsSSvKucLd73ag9WMIEcwo4OcEk5UOpR4WDoD0pkBWkHWDg2avrO+kHFoYFVoOxSemUrOZbzDP2fYlIA/8NwcSB9m6yap8kADRBOh5JW4KrJY0176nobyppi4UgC8b+U0rJAPKkHIzRDJIq8nAb7z/LnUKrRCZ0nzK3bTfTh0wXAJrGKIqN3bE526jNeru7UrygXp3pp9uuMWIlSLVrL28z5RDn+DpsYpHI8Jt3vDNquFMmrOcisZbP1+OkMuWnOcBrZ9GuVourePS0DDnVbKOw3K7yG22/rn7N5pJ+8tMRwJZeSvUZpw8P8kkhXrGViziQqzAgMBAAECggEAf9I2BFYpyUMPYJFQDwjR6xKXLn3Wbr3PWJrElH289R3XQheHTvaXtNamMyR++VvGqd2Z6BMrlfoy3/hoHoPnTsXXUBY3fdX7+jyAAAmkW9PK2XeuZdf1PunQ6ONSjwYlX4TXg4FczMnWOLCB3ok8W29NwkZ7F25yPnRVgPA+xArnt2ACL92xRcE6QvxHEwfQEcuaGSiAIATQ6NRh66jZDSjmjHulYImanLTzyVdm9DZTMmOpZXyz+bB/68MWcRBtCeKq1s8IfSCeToaL5Wm7/5gqvPwIO//PTvbN2oK53S3Myye4DLvZOBeHPTO/W5mVhZXZzGLm9axDskWYiPgIsQKBgQD3ixUkEShFxKrVlMpxOpnlStLMB8W8OIkhgR1HjQRYul08TBl53EJGjxHbEabRgY85WfuG2CL4ElKIolGpJEfWiLPL9dQK3CfBGzjpu2fEdytQlv+f9RiJC+3KujermkLVFyXb4LKZivvcuXkIHxdFQ8ExFJlixA4NDxEObwsfBwKBgQCOuec5paaRe6i91tXt2T3IUQcWSNABX7aGivXWzG/ng9UQMjYzP5k8epz9OGFZ/kPVbFqiC6du30jWOndCC/7XEcremwpcsDArLcqE7Rb0nZmiNaJWki0RqKmDMzX8GWkA3P/bTvpWu98YYP9G6KiFOVOhTU7ILbjkasryJqmf9QKBgQC/C20Wd9Nf/QdnbLzMpFBvgM6tPnZh7DQRUodZWED5hWM9jPHAdbgEophCPR5E5Lu3pHWVvStHz0Q5RSTG6EQ1Ey3IBIJQm1ZnF25WHRdZrisUuGSye8Miyb0Mz6j1XEmmEYZbatAL5hK5Z788AFrCTydDjMVQT0UU2QLt489ucwKBgCI05fkH/Yrio0eUZMNTjJ4k5Vju7INXyCwow9DOQIexLfBqyFiyBmzbSiLaT2K9MM7G4FX0CxXkh9VoP8rhixtKlV+SswIR7Al9OQtws06/MuIQjq7G6+xOiwn5zRd1k5f0X5HVNORytH5oSOZavoDng2amW5pYcvazrZ4pq/+9AoGBANp8nbuLjV3kaQgi7jQ/NbALhRkj9f806i3r8dU2G2r5Uf+YAJgGZHGNHBr/82e8koYWD4F5JuuLO7zyVhQ46mbdmz3fikXs3Eu/cHs/CPdm2ZVO0+Hhzr9kkDgDW3EeFgr3S0N0IZe/nPTuQBtl1z5x01h/YX/Z/uw9g+cN+pVX
+  public-key: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlqoZ1cL5BTbqJ4bvfa3yKE4hM3Xf4q/47vC9RR5WhO/IiJOFhYTcwmJOadnZsdders9NOJBDJfCeEH+EkWEE9ix177fwm+1hw5HGNHqHyOYHdJBQ4TAsFIGETjbs0qeAipZ+Fi+l4WXcSiHCODIKuKceu1Oc3nldIZQsMt7XlVOJ0YJBWYO50vKSI5K5Sn/2R5AdxR1FT4DjoXW2ZJo1ypsS7QQGvYKnU9Jz9Zasf+bVscXI62PMEfte6PeblOLbB5mCftcwGpPalov8JklhFaPWSJgHMm5Q7UdWipPk8Y7lRmhJjLxLmk7PQfifdmXt56NEHhHHTJkbzivD2JXq7wIDAQAB
+  gateway-url: https://openapi-sandbox.dl.alipaydev.com/gateway.do
+  notify-url: http://localhost:8080/api/pay/alipay/notify
+  return-url: http://localhost:3001/pay/success
