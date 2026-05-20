@@ -9,8 +9,6 @@ import java.util.List;
 @Mapper
 public interface PermissionMapper extends BaseMapper<Permission> {
     
-    @Select("SELECT p.* FROM permission p " +
-            "INNER JOIN role_permission rp ON p.id = rp.permission_id " +
-            "WHERE rp.role_id = #{roleId}")
+    @Select("SELECT p.* FROM permission p WHERE p.status = 1 ORDER BY p.sort_order ASC, p.id ASC")
     List<Permission> selectByRoleId(Long roleId);
 }

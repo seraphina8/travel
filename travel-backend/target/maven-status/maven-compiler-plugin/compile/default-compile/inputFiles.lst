@@ -30,12 +30,10 @@ C:\Users\86183\Desktop\travel\travel-backend\src\main\java\com\travel\controller
 C:\Users\86183\Desktop\travel\travel-backend\src\main\java\com\travel\controller\ChatController.java
 C:\Users\86183\Desktop\travel\travel-backend\src\main\java\com\travel\controller\TripController.java
 C:\Users\86183\Desktop\travel\travel-backend\src\main\java\com\travel\mapper\AdminMapper.java
-C:\Users\86183\Desktop\travel\travel-backend\src\main\java\com\travel\entity\AdminLog.java
 C:\Users\86183\Desktop\travel\travel-backend\src\main\java\com\travel\service\UserService.java
 C:\Users\86183\Desktop\travel\travel-backend\src\main\java\com\travel\entity\Order.java
 C:\Users\86183\Desktop\travel\travel-backend\src\main\java\com\travel\common\PageResult.java
 C:\Users\86183\Desktop\travel\travel-backend\src\main\java\com\travel\entity\NoteLike.java
-C:\Users\86183\Desktop\travel\travel-backend\src\main\java\com\travel\mapper\AdminLogMapper.java
 C:\Users\86183\Desktop\travel\travel-backend\src\main\java\com\travel\mapper\TripDetailMapper.java
 C:\Users\86183\Desktop\travel\travel-backend\src\main\java\com\travel\controller\UploadController.java
 C:\Users\86183\Desktop\travel\travel-backend\src\main\java\com\travel\controller\OrderController.java
