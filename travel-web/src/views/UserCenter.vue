@@ -63,6 +63,15 @@
             <li>
               <a
                 href="#"
+                :class="{ active: activeTab === 'strategy' }"
+                @click.prevent="activeTab = 'strategy'"
+              >
+                <i class="bi bi-journal-text"></i> 我的攻略
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
                 :class="{ active: activeTab === 'collect' }"
                 @click.prevent="activeTab = 'collect'"
               >
@@ -249,6 +258,31 @@
               </div>
             </div>
           </form>
+        </div>
+
+        <div class="content-card" v-if="activeTab === 'strategy'">
+          <h5 class="card-title">我的攻略</h5>
+          <div class="collection-list" v-if="strategies.length > 0">
+            <div
+              class="collection-item"
+              v-for="item in strategies"
+              :key="item.id"
+              @click="router.push(`/strategy/${item.id}`)"
+            >
+              <img :src="item.coverImage || defaultImage" :alt="item.title" />
+              <div class="collection-info">
+                <h6>{{ item.title }}</h6>
+                <div class="collection-meta">
+                  <span class="type-badge">{{ item.status === 1 ? "已发布" : "待审核" }}</span>
+                  <small>{{ formatDate(item.createTime) }}</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="empty-state" v-else>
+            <i class="bi bi-journal-text"></i>
+            <p>暂无攻略</p>
+          </div>
         </div>
 
         <!-- Collections -->
@@ -490,6 +524,7 @@ const followCount = ref({ followCount: 0, fansCount: 0 });
 const followList = ref([]);
 const fansList = ref([]);
 const collections = ref([]);
+const strategies = ref([]);
 const footprints = ref([]);
 const discoverUsers = ref([]);
 const searchKeyword = ref("");
@@ -556,6 +591,17 @@ const loadCollections = async () => {
     }
   } catch (e) {
     console.error("加载收藏失败", e);
+  }
+};
+
+const loadStrategies = async () => {
+  try {
+    const res = await api.getMyStrategies();
+    if (res.code === 200) {
+      strategies.value = res.data || [];
+    }
+  } catch (e) {
+    console.error("加载我的攻略失败", e);
   }
 };
 
@@ -860,6 +906,7 @@ watch(activeTab, (newTab) => {
   if (newTab === "follow") loadFollowList();
   if (newTab === "fans") loadFansList();
   if (newTab === "collect") loadCollections();
+  if (newTab === "strategy") loadStrategies();
   if (newTab === "footprint") loadFootprints();
   if (newTab === "discover") loadRecommendUsers();
   if (newTab === "password") loadPasswordCaptcha();

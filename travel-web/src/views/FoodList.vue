@@ -146,7 +146,8 @@ const loadData = async () => {
       province: province.value || undefined,
       keyword: keyword.value || undefined,
       tag: selectedTag.value || undefined,
-      sortBy: sortBy.value || undefined
+      sortBy: sortBy.value || undefined,
+      status: 1
     })
     if (res.code === 200) {
       foods.value = res.data.records || []

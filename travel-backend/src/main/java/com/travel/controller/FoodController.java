@@ -33,7 +33,8 @@ public class FoodController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String tag,
             @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) Integer status) {
+            @RequestParam(required = false) Integer status,
+            @RequestHeader(value = "Authorization", required = false) String token) {
         Page<Food> page = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<Food> wrapper = new LambdaQueryWrapper<>();
         if (province != null && !province.isEmpty()) {
@@ -56,6 +57,8 @@ public class FoodController {
 
         if (status != null) {
             wrapper.eq(Food::getStatus, status);
+        } else if (!isAdminToken(token)) {
+            wrapper.eq(Food::getStatus, 1);
         }
         if (tag != null && !tag.trim().isEmpty()) {
             String tagKeyword = tag.trim();
@@ -78,6 +81,18 @@ public class FoodController {
             wrapper.orderByDesc(Food::getCreateTime);
         }
         return Result.success(foodMapper.selectPage(page, wrapper));
+    }
+
+    private boolean isAdminToken(String authorization) {
+        if (authorization == null || authorization.isBlank()) {
+            return false;
+        }
+        String tokenValue = authorization.startsWith("Bearer ") ? authorization.substring(7) : authorization;
+        try {
+            return !jwtUtils.isTokenExpired(tokenValue) && "admin".equals(jwtUtils.getTokenType(tokenValue));
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     // 美食详情

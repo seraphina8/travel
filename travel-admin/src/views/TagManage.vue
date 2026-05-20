@@ -40,16 +40,12 @@
                 {{ tag.status === 1 ? '启用' : '停用' }}
               </span>
             </td>
-            <td class="text-end">
-              <button class="btn btn-sm btn-outline-primary me-2" @click="openModal(tag)">
-                <i class="bi bi-pencil"></i>
+            <td class="action-btns justify-content-end">
+              <button class="btn btn-sm btn-outline-primary" @click="openModal(tag)">编辑</button>
+              <button class="btn btn-sm btn-outline-warning" @click="toggleStatus(tag)">
+                {{ tag.status === 1 ? '停用' : '启用' }}
               </button>
-              <button class="btn btn-sm btn-outline-warning me-2" @click="toggleStatus(tag)">
-                <i class="bi" :class="tag.status === 1 ? 'bi-pause' : 'bi-play'"></i>
-              </button>
-              <button class="btn btn-sm btn-outline-danger" @click="removeTag(tag)">
-                <i class="bi bi-trash"></i>
-              </button>
+              <button class="btn btn-sm btn-outline-danger" @click="removeTag(tag)">删除</button>
             </td>
           </tr>
           <tr v-if="tags.length === 0">

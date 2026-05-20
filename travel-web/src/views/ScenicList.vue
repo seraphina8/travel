@@ -255,7 +255,12 @@ const quickCollect = async (scenic, event) => {
   try {
     const res = await api.toggleCollect(scenic.id, 1);
     if (res.code === 200) {
+      const wasCollected = scenic.collected;
       scenic.collected = !scenic.collected;
+      scenic.collectCount = Math.max(
+        0,
+        Number(scenic.collectCount || 0) + (wasCollected ? -1 : 1),
+      );
       if (scenic.collected) {
         collectedIds.value.add(scenic.id);
       } else {

@@ -53,6 +53,16 @@ public class TripController {
     }
 
     // 切换行程公开/私有状态
+    @GetMapping("/user/{userId}/public")
+    public Result<List<Trip>> userPublicTrips(@PathVariable Long userId) {
+        LambdaQueryWrapper<Trip> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Trip::getUserId, userId);
+        wrapper.eq(Trip::getStatus, 1);
+        wrapper.eq(Trip::getIsPublic, 1);
+        wrapper.orderByDesc(Trip::getCreateTime);
+        return Result.success(tripMapper.selectList(wrapper));
+    }
+
     @PutMapping("/{id}/public")
     public Result<String> togglePublic(
             @RequestHeader("Authorization") String token,

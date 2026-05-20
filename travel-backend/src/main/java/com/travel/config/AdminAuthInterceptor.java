@@ -88,7 +88,12 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
     }
 
     private boolean isFeedbackManagement(String uri) {
-        return uri.equals("/api/feedback") || uri.startsWith("/api/feedback/");
+        if (uri.equals("/api/feedback/submit") || uri.equals("/api/feedback/my")) {
+            return false;
+        }
+        return uri.equals("/api/feedback")
+                || uri.matches("^/api/feedback/\\d+$")
+                || uri.matches("^/api/feedback/\\d+/reply$");
     }
 
     private boolean isOrderManagement(String uri, String method) {

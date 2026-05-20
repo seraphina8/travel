@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { fixImageDeep, fixImageUrl } from '../utils/imageHelper'
 
 const api = axios.create({
   baseURL: '/api',
@@ -14,7 +15,7 @@ api.interceptors.request.use(config => {
 })
 
 api.interceptors.response.use(
-  response => response.data,
+  response => fixImageDeep(response.data),
   error => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
@@ -166,6 +167,11 @@ export default {
     formData.append('file', file)
     return api.post('/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
+    }).then(res => {
+      if (res?.code === 200 && res.data) {
+        res.data = fixImageUrl(res.data)
+      }
+      return res
     })
   },
   

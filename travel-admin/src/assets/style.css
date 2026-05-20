@@ -572,8 +572,8 @@ body {
 /* 操作列固定可见 */
 .table tbody td:last-child,
 .table thead th:last-child {
-  width: 190px;
-  min-width: 190px;
+  width: 220px;
+  min-width: 220px;
   overflow: visible;
 }
 
@@ -606,20 +606,21 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   white-space: nowrap;
+  row-gap: 6px;
 }
 
 /* 表格按钮压缩 */
 .table .btn,
 .action-btns .btn {
-  min-width: 50px;
-  height: 30px;
+  min-width: 56px;
+  height: 32px;
   padding: 0 10px;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 500;
-  line-height: 30px;
+  line-height: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;

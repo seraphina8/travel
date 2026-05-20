@@ -249,6 +249,11 @@ const loadData = async () => {
   try {
     const res = await api.getFoodDetail(route.params.id)
     if (res.code === 200) {
+      if (!res.data || res.data.status !== 1) {
+        alert('该美食暂未审核通过')
+        router.push('/food')
+        return
+      }
       food.value = res.data
     }
   } catch (e) {
@@ -290,7 +295,8 @@ const loadRecommend = async () => {
   try {
     const res = await api.getFoodList({ 
       pageSize: 5, 
-      province: food.value.province 
+      province: food.value.province,
+      status: 1
     })
     if (res.code === 200) {
       recommendFoods.value = (res.data.records || [])

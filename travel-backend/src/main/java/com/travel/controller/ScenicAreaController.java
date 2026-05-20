@@ -3,6 +3,7 @@ package com.travel.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.travel.common.Result;
 import com.travel.entity.ScenicArea;
+import com.travel.mapper.ScenicAreaMapper;
 import com.travel.service.ScenicAreaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,9 @@ public class ScenicAreaController {
     @Autowired
     private ScenicAreaService scenicAreaService;
 
+    @Autowired
+    private ScenicAreaMapper scenicAreaMapper;
+
     @GetMapping
     public Result<Page<ScenicArea>> list(
             @RequestParam(defaultValue = "1") Integer pageNum,
@@ -30,6 +34,10 @@ public class ScenicAreaController {
     @GetMapping("/{id}")
     public Result<ScenicArea> getById(@PathVariable Long id) {
         ScenicArea scenic = scenicAreaService.getById(id);
+        if (scenic != null) {
+            scenicAreaMapper.incrementViewCount(id);
+            scenic.setViewCount((scenic.getViewCount() == null ? 0 : scenic.getViewCount()) + 1);
+        }
         return scenic == null ? Result.error("景区不存在") : Result.success(scenic);
     }
 

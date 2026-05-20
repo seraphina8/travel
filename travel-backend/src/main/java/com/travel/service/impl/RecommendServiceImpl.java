@@ -132,9 +132,6 @@ public class RecommendServiceImpl implements RecommendService {
         behavior.setCreateTime(LocalDateTime.now());
         userBehaviorMapper.insert(behavior);
 
-        if (targetType == TARGET_TYPE_SCENIC && behaviorType == 1) {
-            scenicAreaMapper.incrementViewCount(targetId);
-        }
     }
 
     @Override

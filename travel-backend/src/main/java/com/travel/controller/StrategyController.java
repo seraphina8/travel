@@ -84,12 +84,23 @@ public class StrategyController {
     }
 
     // 根据ID查询攻略详情
+    @GetMapping("/user/{userId}")
+    public Result<List<Strategy>> userStrategies(@PathVariable Long userId) {
+        LambdaQueryWrapper<Strategy> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Strategy::getUserId, userId);
+        wrapper.eq(Strategy::getStatus, 1);
+        wrapper.orderByDesc(Strategy::getCreateTime);
+        return Result.success(strategyService.list(wrapper));
+    }
+
     @GetMapping("/{id}")
     public Result<Strategy> getById(@PathVariable Long id) {
         Strategy strategy = strategyService.getStrategyById(id);
         if (strategy == null) {
             return Result.error("攻略不存在");
         }
+        strategy.setViewCount((strategy.getViewCount() == null ? 0 : strategy.getViewCount()) + 1);
+        strategyService.updateById(strategy);
         return Result.success(strategy);
     }
 

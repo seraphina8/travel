@@ -71,6 +71,12 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: "/feedback",
+    name: "Feedback",
+    component: () => import("../views/Feedback.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
     path: "/map",
     name: "ScenicMap",
     component: () => import("../views/ScenicMap.vue"),

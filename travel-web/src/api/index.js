@@ -81,6 +81,9 @@ export default {
   getMyStrategies() {
     return api.get("/strategy/my");
   },
+  getUserStrategies(userId) {
+    return api.get(`/strategy/user/${userId}`);
+  },
 
   // 订单
   createOrder(data) {
@@ -239,6 +242,9 @@ export default {
   getMyTrips() {
     return api.get("/trip/my");
   },
+  getUserPublicTrips(userId) {
+    return api.get(`/trip/user/${userId}/public`);
+  },
   toggleTripPublic(id, isPublic) {
     return api.put(`/trip/${id}/public`, null, { params: { isPublic } });
   },
@@ -326,6 +332,12 @@ export default {
   },
   getRecommendUsers() {
     return api.get("/user/recommend");
+  },
+  submitFeedback(data) {
+    return api.post("/feedback/submit", data);
+  },
+  getMyFeedback() {
+    return api.get("/feedback/my");
   },
 
   // AI导游

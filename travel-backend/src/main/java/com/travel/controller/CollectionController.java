@@ -193,6 +193,13 @@ public class CollectionController {
                     attraction.setCollectCount(Math.max(0, count + delta));
                     attractionMapper.updateById(attraction);
                 }
+            } else if (type == 2) {
+                Strategy strategy = strategyMapper.selectById(targetId);
+                if (strategy != null) {
+                    Integer count = strategy.getLikeCount() == null ? 0 : strategy.getLikeCount();
+                    strategy.setLikeCount(Math.max(0, count + delta));
+                    strategyMapper.updateById(strategy);
+                }
             }
         } catch (Exception e) {
             // 忽略计数更新失败

@@ -125,6 +125,7 @@ const selectedTags = ref([])
 const customTags = ref('')
 const editorRef = ref(null)
 const imageInputRef = ref(null)
+const savedRange = ref(null)
 
 const form = ref({
   title: '',
@@ -164,18 +165,46 @@ const toggleTag = (name) => {
 }
 
 const formatText = (command) => {
+  restoreEditorSelection()
   document.execCommand(command, false, null)
   editorRef.value?.focus()
 }
 
 const onEditorInput = () => {
   form.value.content = editorRef.value?.innerHTML || ''
+  saveEditorSelection()
+}
+
+const saveEditorSelection = () => {
+  const selection = window.getSelection()
+  if (!selection?.rangeCount || !editorRef.value) return
+  const range = selection.getRangeAt(0)
+  if (editorRef.value.contains(range.commonAncestorContainer)) {
+    savedRange.value = range.cloneRange()
+  }
+}
+
+const restoreEditorSelection = () => {
+  editorRef.value?.focus()
+  if (!savedRange.value) return
+  const selection = window.getSelection()
+  selection?.removeAllRanges()
+  selection?.addRange(savedRange.value)
+}
+
+const getContentImages = () => {
+  const div = document.createElement('div')
+  div.innerHTML = form.value.content || ''
+  return Array.from(div.querySelectorAll('img'))
+    .map(img => img.getAttribute('src'))
+    .filter(Boolean)
 }
 
 const uploadAndInsertImage = async (file) => {
   const res = await api.uploadFile(file)
   if (res.code === 200) {
-    document.execCommand('insertHTML', false, `<img src="${res.data}" style="max-width: 100%; margin: 10px 0;">`)
+    restoreEditorSelection()
+    document.execCommand('insertHTML', false, `<p><img src="${res.data}" style="max-width: 100%; margin: 10px 0;"></p>`)
     onEditorInput()
   } else {
     alert(res.message || '图片上传失败')
@@ -197,6 +226,7 @@ const onEditorPaste = async (event) => {
 }
 
 const triggerImageUpload = () => {
+  saveEditorSelection()
   imageInputRef.value?.click()
 }
 
@@ -225,9 +255,11 @@ const submitNote = async () => {
 
   submitting.value = true
   try {
+    onEditorInput()
     const res = await api.createTravelNote({
       ...form.value,
-      tags: mergedTags.value
+      tags: mergedTags.value,
+      images: JSON.stringify(getContentImages())
     })
     if (res.code === 200) {
       alert('发布成功')

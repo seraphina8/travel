@@ -26,10 +26,10 @@
           <h3 class="note-title">{{ note.title }}</h3>
           
           <!-- 内容 -->
-          <div class="note-content" v-html="note.content"></div>
+          <div class="note-content" v-html="displayContent"></div>
           
           <!-- 图片 -->
-          <div class="note-images" v-if="images.length > 0">
+          <div class="note-images" v-if="false">
             <div class="image-grid">
               <div class="image-item" v-for="(img, idx) in images" :key="idx">
                 <img :src="img" class="image-preview">
@@ -139,6 +139,14 @@ const images = computed(() => {
   } catch {
     return []
   }
+})
+
+const displayContent = computed(() => {
+  const content = note.value.content || ''
+  if (!images.value.length || content.includes('<img')) return content
+  return content + images.value
+    .map(img => `<img src="${img}" style="max-width: 100%; margin: 10px 0;">`)
+    .join('')
 })
 
 const getAvatar = (id) => `https://api.dicebear.com/7.x/avataaars/svg?seed=${id}`

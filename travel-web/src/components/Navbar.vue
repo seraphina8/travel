@@ -80,6 +80,7 @@
           <ul class="dropdown-menu dropdown-menu-end" :class="{ show: showDropdown }">
             <li><router-link class="dropdown-item" to="/user" @click="closeDropdown"><i class="bi bi-person me-2"></i>用户中心</router-link></li>
             <li><router-link class="dropdown-item" to="/order" @click="closeDropdown"><i class="bi bi-bag me-2"></i>我的订单</router-link></li>
+            <li><router-link class="dropdown-item" to="/feedback" @click="closeDropdown"><i class="bi bi-chat-left-text me-2"></i>意见反馈</router-link></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item text-danger" href="#" @click.prevent="logout"><i class="bi bi-box-arrow-right me-2"></i>退出登录</a></li>
           </ul>

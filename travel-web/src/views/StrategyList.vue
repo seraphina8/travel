@@ -233,7 +233,12 @@ const quickCollect = async (strategy, event) => {
   try {
     const res = await api.toggleCollect(strategy.id, 2)
     if (res.code === 200) {
+      const wasCollected = strategy.collected
       strategy.collected = !strategy.collected
+      strategy.likeCount = Math.max(
+        0,
+        Number(strategy.likeCount || 0) + (wasCollected ? -1 : 1)
+      )
       if (strategy.collected) {
         collectedIds.value.add(strategy.id)
       } else {

@@ -36,7 +36,7 @@
           <th width="80">浏览量</th>
           <th width="80">收藏数</th>
           <th width="160">创建时间</th>
-          <th width="150">操作</th>
+          <th width="190">操作</th>
         </tr>
       </thead>
       <tbody>
@@ -61,15 +61,9 @@
           <td>{{ item.collectCount || 0 }}</td>
           <td>{{ formatDate(item.createTime) }}</td>
           <td class="action-btns">
-            <button class="btn btn-info btn-sm" @click="viewDetail(item)" title="查看详情">
-              <i class="bi bi-eye"></i>
-            </button>
-            <button class="btn btn-primary btn-sm" @click="openModal(item)" title="编辑">
-              <i class="bi bi-pencil"></i>
-            </button>
-            <button class="btn btn-danger btn-sm" @click="handleDelete(item.id)" title="删除">
-              <i class="bi bi-trash"></i>
-            </button>
+            <button class="btn btn-info btn-sm" @click="viewDetail(item)">查看</button>
+            <button class="btn btn-primary btn-sm" @click="openModal(item)">编辑</button>
+            <button class="btn btn-danger btn-sm" @click="handleDelete(item.id)">删除</button>
           </td>
         </tr>
       </tbody>
@@ -379,8 +373,17 @@ const resetSearch = () => {
   loadData()
 }
 
-const viewDetail = (item) => {
+const viewDetail = async (item) => {
   detailData.value = item
+  try {
+    const res = await api.getAttraction(item.id)
+    if (res.code === 200 && res.data) {
+      detailData.value = res.data
+      item.viewCount = res.data.viewCount
+    }
+  } catch (e) {
+    // 查看详情失败时仍展示当前行数据
+  }
   if (!detailModal) {
     detailModal = new Modal(detailModalRef.value)
   }

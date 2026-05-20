@@ -12,10 +12,9 @@
       <h1 class="h3 fw-bold mb-1"><i class="bi bi-person me-2"></i>用户主页</h1>
     </div>
   </div>
-  
+
   <div class="container py-4">
     <div class="row g-4">
-      <!-- 用户信息卡片 -->
       <div class="col-lg-4">
         <div class="profile-card">
           <div class="profile-avatar">
@@ -23,7 +22,7 @@
           </div>
           <h4 class="profile-name">{{ targetUser.nickname || targetUser.username || '用户' + targetUser.id }}</h4>
           <p class="profile-email">{{ targetUser.email || '未公开邮箱' }}</p>
-          
+
           <div class="profile-stats">
             <div class="stat-item">
               <h5>{{ followCount.followCount || 0 }}</h5>
@@ -34,10 +33,10 @@
               <small>粉丝</small>
             </div>
           </div>
-          
+
           <div class="profile-actions" v-if="!isSelf">
-            <button 
-              class="action-btn follow" 
+            <button
+              class="action-btn follow"
               :class="{ followed: isFollowed }"
               @click="toggleFollow"
             >
@@ -53,20 +52,42 @@
           </div>
         </div>
       </div>
-      
-      <!-- 用户动态 -->
+
       <div class="col-lg-8">
         <div class="content-card">
           <h5 class="card-title">用户动态</h5>
-          
-          <!-- 分享的美食 -->
-          <div v-if="userFoods.length > 0" class="food-section">
+
+          <div v-if="userStrategies.length > 0 || publicTrips.length > 0" class="content-section">
+            <h6 class="section-subtitle">攻略与公开行程</h6>
+            <div class="content-grid">
+              <div class="content-item" v-for="strategy in userStrategies" :key="`strategy-${strategy.id}`">
+                <router-link :to="`/strategy/${strategy.id}`" class="content-link">
+                  <img :src="strategy.coverImage || strategy.image || strategyImage" :alt="strategy.title">
+                  <div class="content-info">
+                    <h6>{{ strategy.title }}</h6>
+                    <small>已审核攻略</small>
+                  </div>
+                </router-link>
+              </div>
+              <div class="content-item" v-for="trip in publicTrips" :key="`trip-${trip.id}`">
+                <router-link :to="`/trip/${trip.id}`" class="content-link">
+                  <img :src="trip.coverImage || trip.image || tripImage" :alt="trip.title">
+                  <div class="content-info">
+                    <h6>{{ trip.title }}</h6>
+                    <small>公开行程</small>
+                  </div>
+                </router-link>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="userFoods.length > 0" class="content-section">
             <h6 class="section-subtitle">分享的美食</h6>
-            <div class="food-grid">
-              <div class="food-item" v-for="food in userFoods" :key="food.id">
-                <router-link :to="`/food/${food.id}`" class="food-link">
+            <div class="content-grid">
+              <div class="content-item" v-for="food in userFoods" :key="`food-${food.id}`">
+                <router-link :to="`/food/${food.id}`" class="content-link">
                   <img :src="food.coverImage || defaultImage" :alt="food.name">
-                  <div class="food-info">
+                  <div class="content-info">
                     <h6>{{ food.name }}</h6>
                     <small>{{ food.province }} · {{ food.city }}</small>
                   </div>
@@ -74,8 +95,8 @@
               </div>
             </div>
           </div>
-          
-          <div class="empty-state" v-if="userFoods.length === 0">
+
+          <div class="empty-state" v-if="userFoods.length === 0 && userStrategies.length === 0 && publicTrips.length === 0">
             <i class="bi bi-inbox"></i>
             <p>该用户暂无公开动态</p>
           </div>
@@ -96,18 +117,22 @@ const targetUser = ref({})
 const followCount = ref({ followCount: 0, fansCount: 0 })
 const isFollowed = ref(false)
 const userFoods = ref([])
+const userStrategies = ref([])
+const publicTrips = ref([])
 const defaultImage = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400'
+const strategyImage = 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400'
+const tripImage = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400'
 
 const currentUser = computed(() => JSON.parse(localStorage.getItem('user') || '{}'))
 const isSelf = computed(() => currentUser.value.id == route.params.id)
 
-const getAvatar = (id) => `https://api.dicebear.com/7.x/avataaars/svg?seed=${id}`
+const getAvatar = (id) => `https://api.dicebear.com/7.x/avataaars/svg?seed=${id || 'user'}`
 
 const loadUserInfo = async () => {
   try {
     const res = await api.getUserInfo(route.params.id)
     if (res.code === 200) {
-      targetUser.value = res.data
+      targetUser.value = res.data || {}
     }
   } catch (e) {
     console.error('加载用户信息失败', e)
@@ -118,7 +143,7 @@ const loadFollowCount = async () => {
   try {
     const res = await api.getUserFollowCount(route.params.id)
     if (res.code === 200) {
-      followCount.value = res.data
+      followCount.value = res.data || { followCount: 0, fansCount: 0 }
     }
   } catch (e) {}
 }
@@ -174,16 +199,35 @@ const loadUserFoods = async () => {
   } catch (e) {}
 }
 
+const loadUserStrategies = async () => {
+  try {
+    const res = await api.getUserStrategies(route.params.id)
+    if (res.code === 200) {
+      userStrategies.value = res.data || []
+    }
+  } catch (e) {}
+}
+
+const loadPublicTrips = async () => {
+  try {
+    const res = await api.getUserPublicTrips(route.params.id)
+    if (res.code === 200) {
+      publicTrips.value = res.data || []
+    }
+  } catch (e) {}
+}
+
 onMounted(() => {
   loadUserInfo()
   loadFollowCount()
   checkFollow()
   loadUserFoods()
+  loadUserStrategies()
+  loadPublicTrips()
 })
 </script>
 
 <style scoped>
-/* 统一蓝色主题 */
 .user-profile-header {
   background: linear-gradient(135deg, #5a9bcf 0%, #4a8bbf 100%);
   padding: 40px 0;
@@ -224,7 +268,6 @@ onMounted(() => {
   color: #fff;
 }
 
-/* 用户信息卡片 - 直角设计 */
 .profile-card {
   background: #fff;
   border: 1px solid #e5e7eb;
@@ -334,7 +377,6 @@ onMounted(() => {
   font-size: 12px;
 }
 
-/* 内容卡片 */
 .content-card {
   background: #fff;
   border: 1px solid #e5e7eb;
@@ -351,6 +393,10 @@ onMounted(() => {
   display: inline-block;
 }
 
+.content-section + .content-section {
+  margin-top: 24px;
+}
+
 .section-subtitle {
   font-size: 14px;
   font-weight: 600;
@@ -358,24 +404,23 @@ onMounted(() => {
   margin: 0 0 12px 0;
 }
 
-/* 美食网格 */
-.food-grid {
+.content-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
 }
 
-.food-item {
+.content-item {
   border: 1px solid #e5e7eb;
   transition: all 0.2s;
 }
 
-.food-item:hover {
+.content-item:hover {
   border-color: #5a9bcf;
   transform: translateY(-2px);
 }
 
-.food-link {
+.content-link {
   display: flex;
   align-items: center;
   padding: 12px;
@@ -384,19 +429,19 @@ onMounted(() => {
   gap: 12px;
 }
 
-.food-link img {
+.content-link img {
   width: 60px;
   height: 60px;
   object-fit: cover;
   flex-shrink: 0;
 }
 
-.food-info {
+.content-info {
   flex: 1;
   min-width: 0;
 }
 
-.food-info h6 {
+.content-info h6 {
   font-size: 14px;
   font-weight: 600;
   color: #2c3e50;
@@ -406,12 +451,11 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-.food-info small {
+.content-info small {
   font-size: 11px;
   color: #95a5a6;
 }
 
-/* 空状态 */
 .empty-state {
   text-align: center;
   padding: 60px 20px;
@@ -426,24 +470,23 @@ onMounted(() => {
   margin: 12px 0 0 0;
 }
 
-/* 响应式 */
 @media (max-width: 768px) {
   .user-profile-header {
     padding: 30px 0;
   }
-  
+
   .profile-card {
     padding: 24px;
   }
-  
-  .food-grid {
+
+  .content-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .profile-actions {
     flex-direction: column;
   }
-  
+
   .action-btn {
     width: 100%;
     justify-content: center;

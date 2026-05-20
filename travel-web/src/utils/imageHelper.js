@@ -35,7 +35,7 @@ export const fixImageUrl = (url) => {
  */
 export const fixImageFields = (
   obj,
-  fields = ["coverImage", "avatar", "image"],
+  fields = ["coverImage", "avatar", "image", "imageUrl", "targetImage"],
 ) => {
   if (!obj || typeof obj !== "object") return obj;
   const result = { ...obj };
@@ -55,7 +55,7 @@ export const fixImageFields = (
  */
 export const fixImageArray = (
   arr,
-  fields = ["coverImage", "avatar", "image"],
+  fields = ["coverImage", "avatar", "image", "imageUrl", "targetImage"],
 ) => {
   if (!Array.isArray(arr)) return arr;
   return arr.map((item) => fixImageFields(item, fields));
@@ -80,6 +80,8 @@ export const fixImageDeep = (data) => {
     // 处理常见的图片字段
     const imageFields = [
       "coverImage",
+      "imageUrl",
+      "targetImage",
       "avatar",
       "image",
       "cover",
