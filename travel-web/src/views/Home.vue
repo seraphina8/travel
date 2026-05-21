@@ -65,10 +65,7 @@
             v-for="scenic in recommendScenics"
             :key="scenic.id"
           >
-            <router-link
-              :to="`/scenic/${scenic.id}`"
-              class="scenic-card d-block"
-            >
+            <div class="scenic-card d-block" @click="openScenic(scenic)">
               <div class="card-img">
                 <img
                   :src="scenic.coverImage || defaultImage"
@@ -79,6 +76,17 @@
                 }}</span>
                 <span class="badge-recommend">猜你喜欢</span>
                 <span class="badge-price">¥{{ scenic.price || 99 }}起</span>
+                <button
+                  class="collect-btn"
+                  :class="{ active: scenic.collected }"
+                  @click.stop="toggleScenicCollect(scenic)"
+                  :title="scenic.collected ? '取消收藏' : '收藏'"
+                >
+                  <i
+                    class="bi"
+                    :class="scenic.collected ? 'bi-heart-fill' : 'bi-heart'"
+                  ></i>
+                </button>
               </div>
               <div class="card-body">
                 <h5 class="card-title">{{ scenic.name }}</h5>
@@ -96,7 +104,7 @@
                   >
                 </div>
               </div>
-            </router-link>
+            </div>
           </div>
         </div>
       </div>
@@ -117,10 +125,7 @@
             v-for="scenic in hotScenics"
             :key="scenic.id"
           >
-            <router-link
-              :to="`/scenic/${scenic.id}`"
-              class="scenic-card d-block"
-            >
+            <div class="scenic-card d-block" @click="openScenic(scenic)">
               <div class="card-img">
                 <img
                   :src="scenic.coverImage || defaultImage"
@@ -130,6 +135,17 @@
                   scenic.level
                 }}</span>
                 <span class="badge-price">¥{{ scenic.minPrice || 99 }}起</span>
+                <button
+                  class="collect-btn"
+                  :class="{ active: scenic.collected }"
+                  @click.stop="toggleScenicCollect(scenic)"
+                  :title="scenic.collected ? '取消收藏' : '收藏'"
+                >
+                  <i
+                    class="bi"
+                    :class="scenic.collected ? 'bi-heart-fill' : 'bi-heart'"
+                  ></i>
+                </button>
               </div>
               <div class="card-body">
                 <h5 class="card-title">{{ scenic.name }}</h5>
@@ -148,7 +164,7 @@
                   >
                 </div>
               </div>
-            </router-link>
+            </div>
           </div>
         </div>
 
@@ -175,15 +191,26 @@
             v-for="strategy in hotStrategies"
             :key="strategy.id"
           >
-            <router-link
-              :to="`/strategy/${strategy.id}`"
+            <div
               class="strategy-card d-block"
+              @click="router.push(`/strategy/${strategy.id}`)"
             >
               <div class="card-img">
                 <img
                   :src="strategy.coverImage || defaultImage"
                   :alt="strategy.title"
                 />
+                <button
+                  class="collect-btn"
+                  :class="{ active: strategy.collected }"
+                  @click.stop="toggleStrategyCollect(strategy)"
+                  :title="strategy.collected ? '取消收藏' : '收藏'"
+                >
+                  <i
+                    class="bi"
+                    :class="strategy.collected ? 'bi-heart-fill' : 'bi-heart'"
+                  ></i>
+                </button>
               </div>
               <div class="card-body">
                 <h5 class="card-title">{{ strategy.title }}</h5>
@@ -207,7 +234,7 @@
                   {{ strategy.likeCount || 0 }}</span
                 >
               </div>
-            </router-link>
+            </div>
           </div>
         </div>
 
@@ -340,6 +367,119 @@ const setCachedRecommendScenics = (data) => {
   } catch (e) {}
 };
 
+const isLoggedIn = () => Boolean(localStorage.getItem("userToken"));
+
+const syncScenicInLists = (scenicId, updater) => {
+  [recommendScenics.value, hotScenics.value].forEach((list) => {
+    list.forEach((item) => {
+      if (item.id === scenicId) {
+        updater(item);
+      }
+    });
+  });
+  if (recommendScenics.value.length > 0) {
+    setCachedRecommendScenics(recommendScenics.value);
+  }
+};
+
+const syncStrategyInList = (strategyId, updater) => {
+  hotStrategies.value.forEach((item) => {
+    if (item.id === strategyId) {
+      updater(item);
+    }
+  });
+};
+
+const hydrateCollectStatus = async () => {
+  if (!isLoggedIn()) return;
+  const seen = new Set();
+  const scenics = [...recommendScenics.value, ...hotScenics.value].filter(
+    (item) => {
+      if (!item?.id || seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
+    },
+  );
+  await Promise.all(
+    scenics.map(async (scenic) => {
+      try {
+        const res = await api.checkCollect(scenic.id, 1);
+        scenic.collected = res?.code === 200 && Boolean(res.data);
+      } catch (e) {
+        scenic.collected = false;
+      }
+    }),
+  );
+  await Promise.all(
+    hotStrategies.value.map(async (strategy) => {
+      try {
+        const res = await api.checkCollect(strategy.id, 2);
+        strategy.collected = res?.code === 200 && Boolean(res.data);
+      } catch (e) {
+        strategy.collected = false;
+      }
+    }),
+  );
+};
+
+const openScenic = (scenic) => {
+  if (!scenic?.id) return;
+  syncScenicInLists(scenic.id, (item) => {
+    item.viewCount = (item.viewCount || 0) + 1;
+  });
+  router.push(`/scenic/${scenic.id}`);
+};
+
+const toggleScenicCollect = async (scenic) => {
+  if (!scenic?.id) return;
+  if (!isLoggedIn()) {
+    router.push("/login");
+    return;
+  }
+  if (scenic.collecting) return;
+  scenic.collecting = true;
+  const wasCollected = Boolean(scenic.collected);
+  try {
+    const res = await api.toggleCollect(scenic.id, 1);
+    if (res?.code === 200) {
+      syncScenicInLists(scenic.id, (item) => {
+        item.collected = !wasCollected;
+        const oldCount = item.collectCount || 0;
+        item.collectCount = Math.max(0, oldCount + (wasCollected ? -1 : 1));
+      });
+    }
+  } catch (e) {
+    console.error("收藏失败", e);
+  } finally {
+    scenic.collecting = false;
+  }
+};
+
+const toggleStrategyCollect = async (strategy) => {
+  if (!strategy?.id) return;
+  if (!isLoggedIn()) {
+    router.push("/login");
+    return;
+  }
+  if (strategy.collecting) return;
+  strategy.collecting = true;
+  const wasCollected = Boolean(strategy.collected);
+  try {
+    const res = await api.toggleCollect(strategy.id, 2);
+    if (res?.code === 200) {
+      syncStrategyInList(strategy.id, (item) => {
+        item.collected = !wasCollected;
+        const oldCount = item.likeCount || 0;
+        item.likeCount = Math.max(0, oldCount + (wasCollected ? -1 : 1));
+      });
+    }
+  } catch (e) {
+    console.error("收藏失败", e);
+  } finally {
+    strategy.collecting = false;
+  }
+};
+
 const loadData = async () => {
   try {
     if (bannerTimer) {
@@ -377,6 +517,7 @@ const loadData = async () => {
       recommendScenics.value = recommendRes.data;
       setCachedRecommendScenics(recommendRes.data);
     }
+    await hydrateCollectStatus();
   } catch (e) {
     console.error("加载数据失败", e);
   }
@@ -596,6 +737,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   position: relative;
+  cursor: pointer;
 }
 
 .scenic-card:hover {
@@ -659,6 +801,36 @@ onUnmounted(() => {
   font-size: 12px;
   font-weight: 500;
   z-index: 2;
+}
+
+.collect-btn {
+  position: absolute;
+  right: 12px;
+  top: 46px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.92);
+  color: #d9534f;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+  z-index: 3;
+  transition:
+    transform 0.2s,
+    background 0.2s,
+    color 0.2s;
+}
+
+.collect-btn:hover {
+  transform: scale(1.08);
+  background: #fff;
+}
+
+.collect-btn.active {
+  background: #d9534f;
+  color: #fff;
 }
 
 .card-body {
