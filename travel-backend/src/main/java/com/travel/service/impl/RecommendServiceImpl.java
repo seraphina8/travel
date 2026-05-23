@@ -34,19 +34,14 @@ public class RecommendServiceImpl implements RecommendService {
 
     @Autowired
     private UserBehaviorMapper userBehaviorMapper;
-
     @Autowired
     private ScenicAreaMapper scenicAreaMapper;
-
     @Autowired
     private StrategyMapper strategyMapper;
-
     @Autowired
     private TripMapper tripMapper;
-
     @Autowired
     private FoodMapper foodMapper;
-
     @Autowired
     private AttractionMapper attractionMapper;
 
@@ -63,9 +58,12 @@ public class RecommendServiceImpl implements RecommendService {
     private static final int TARGET_TYPE_FOOD = 4;
     private static final int TARGET_TYPE_ATTRACTION = 5;
 
+    // ==================== 推荐入口 ====================
+
     @Override
     public List<ScenicArea> getRecommendScenics(Long userId, int limit) {
         int size = normalizeLimit(limit);
+//        调用 mergeRecommendIds() 获取推荐景区 ID
         List<Long> ids = mergeRecommendIds(userId, size, TARGET_TYPE_SCENIC);
         List<ScenicArea> result = loadScenicsByIds(ids);
         appendMissing(result, getScenicFallback(size * 2), ScenicArea::getId, size);
@@ -112,6 +110,8 @@ public class RecommendServiceImpl implements RecommendService {
         return limitList(result, size);
     }
 
+    // ==================== 行为记录 ====================
+
     @Override
     public void recordBehavior(Long userId, Long scenicId, int behaviorType) {
         recordBehavior(userId, scenicId, TARGET_TYPE_SCENIC, behaviorType);
@@ -130,9 +130,12 @@ public class RecommendServiceImpl implements RecommendService {
         behavior.setBehaviorType(behaviorType);
         behavior.setScore(BEHAVIOR_WEIGHTS.getOrDefault(behaviorType, 1.0));
         behavior.setCreateTime(LocalDateTime.now());
-        userBehaviorMapper.insert(behavior);
 
+        // 【数据库 INSERT】插入一条用户行为记录
+        userBehaviorMapper.insert(behavior);
     }
+
+    // ==================== 用户足迹 ====================
 
     @Override
     public List<Map<String, Object>> getUserFootprints(Long userId, int limit) {
@@ -141,6 +144,8 @@ public class RecommendServiceImpl implements RecommendService {
         wrapper.eq(UserBehavior::getBehaviorType, 1);
         wrapper.orderByDesc(UserBehavior::getCreateTime);
         wrapper.last("LIMIT " + normalizeLimit(limit));
+
+        // 【数据库 SELECT】查询用户浏览行为（足迹）
         List<UserBehavior> behaviors = userBehaviorMapper.selectList(wrapper);
 
         List<Map<String, Object>> result = new ArrayList<>();
@@ -152,18 +157,23 @@ public class RecommendServiceImpl implements RecommendService {
         }
         return result;
     }
-
+//    推荐ID融合
+//    先用 collaborativeTargetIds() 做协同过滤推荐；
+//    再用 hotTargetIds() 加入热门资源；
+//    用 LinkedHashSet 去重，并保留顺序。
     private List<Long> mergeRecommendIds(Long userId, int limit, int targetType) {
         LinkedHashSet<Long> ids = new LinkedHashSet<>(collaborativeTargetIds(userId, limit * 2, targetType));
         ids.addAll(hotTargetIds(limit * 2, targetType));
         return new ArrayList<>(ids);
     }
 
+    // ---------- 协同过滤 ----------
     private List<Long> collaborativeTargetIds(Long userId, int limit, int targetType) {
         if (userId == null) {
             return List.of();
         }
 
+        // 【数据库 SELECT】获取用户对某一类型目标的评分（自定义 mapper 方法）
         List<Map<String, Object>> userScores = userBehaviorMapper.getUserTargetScores(userId, targetType);
         if (userScores.isEmpty()) {
             return List.of();
@@ -173,6 +183,7 @@ public class RecommendServiceImpl implements RecommendService {
         for (Map<String, Object> score : userScores) {
             Long targetId = toLong(score.get("target_id"));
             if (targetId != null) {
+                // 【数据库 SELECT】获取与同一目标交互过的其他用户（相似用户）
                 similarUserIds.addAll(userBehaviorMapper.getSimilarUsers(targetId, targetType, userId));
             }
         }
@@ -181,18 +192,23 @@ public class RecommendServiceImpl implements RecommendService {
         }
 
         List<Long> similarUsers = similarUserIds.stream().limit(50).collect(Collectors.toList());
+        // 【数据库 SELECT】基于相似用户行为，获取推荐的目标ID（自定义 mapper 方法）
         return userBehaviorMapper.getRecommendTargetIds(similarUsers, userId, targetType, limit).stream()
                 .map(row -> toLong(row.get("target_id")))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
+    // ---------- 热门数据 ----------
     private List<Long> hotTargetIds(int limit, int targetType) {
+        // 【数据库 SELECT】获取全局热门目标ID（按行为总分排序）
         return userBehaviorMapper.getHotTargetIds(targetType, normalizeLimit(limit)).stream()
                 .map(row -> toLong(row.get("target_id")))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
+
+    // ==================== 按ID列表加载实体（排序） ====================
 
     private List<ScenicArea> loadScenicsByIds(List<Long> ids) {
         if (ids.isEmpty()) {
@@ -201,6 +217,7 @@ public class RecommendServiceImpl implements RecommendService {
         LambdaQueryWrapper<ScenicArea> wrapper = new LambdaQueryWrapper<>();
         wrapper.in(ScenicArea::getId, ids);
         wrapper.eq(ScenicArea::getStatus, 1);
+        // 【数据库 SELECT】根据 ID 列表批量查询景区（状态为1）
         return orderByIds(scenicAreaMapper.selectList(wrapper), ids, ScenicArea::getId);
     }
 
@@ -211,6 +228,7 @@ public class RecommendServiceImpl implements RecommendService {
         LambdaQueryWrapper<Strategy> wrapper = new LambdaQueryWrapper<>();
         wrapper.in(Strategy::getId, ids);
         wrapper.eq(Strategy::getStatus, 1);
+        // 【数据库 SELECT】根据 ID 列表批量查询攻略（状态为1）
         return orderByIds(strategyMapper.selectList(wrapper), ids, Strategy::getId);
     }
 
@@ -222,6 +240,7 @@ public class RecommendServiceImpl implements RecommendService {
         wrapper.in(Trip::getId, ids);
         wrapper.eq(Trip::getStatus, 1);
         wrapper.eq(Trip::getIsPublic, 1);
+        // 【数据库 SELECT】根据 ID 列表批量查询行程（状态为1 且 公开）
         return orderByIds(tripMapper.selectList(wrapper), ids, Trip::getId);
     }
 
@@ -232,6 +251,7 @@ public class RecommendServiceImpl implements RecommendService {
         LambdaQueryWrapper<Food> wrapper = new LambdaQueryWrapper<>();
         wrapper.in(Food::getId, ids);
         wrapper.eq(Food::getStatus, 1);
+        // 【数据库 SELECT】根据 ID 列表批量查询美食（状态为1）
         return orderByIds(foodMapper.selectList(wrapper), ids, Food::getId);
     }
 
@@ -241,8 +261,11 @@ public class RecommendServiceImpl implements RecommendService {
         }
         LambdaQueryWrapper<Attraction> wrapper = new LambdaQueryWrapper<>();
         wrapper.in(Attraction::getId, ids);
+        // 【数据库 SELECT】根据 ID 列表批量查询景点（无状态过滤）
         return orderByIds(attractionMapper.selectList(wrapper), ids, Attraction::getId);
     }
+
+    // ==================== 兜底查询（冷启动/补全） ====================
 
     private List<ScenicArea> getScenicFallback(int limit) {
         LambdaQueryWrapper<ScenicArea> wrapper = new LambdaQueryWrapper<>();
@@ -251,6 +274,7 @@ public class RecommendServiceImpl implements RecommendService {
         wrapper.orderByDesc(ScenicArea::getCollectCount);
         wrapper.orderByDesc(ScenicArea::getCreateTime);
         wrapper.last("LIMIT " + normalizeLimit(limit));
+        // 【数据库 SELECT】兜底：按热度/时间查询景区
         return scenicAreaMapper.selectList(wrapper);
     }
 
@@ -261,6 +285,7 @@ public class RecommendServiceImpl implements RecommendService {
         wrapper.orderByDesc(Strategy::getLikeCount);
         wrapper.orderByDesc(Strategy::getCreateTime);
         wrapper.last("LIMIT " + normalizeLimit(limit));
+        // 【数据库 SELECT】兜底：按热度/时间查询攻略
         return strategyMapper.selectList(wrapper);
     }
 
@@ -270,6 +295,7 @@ public class RecommendServiceImpl implements RecommendService {
         wrapper.eq(Trip::getIsPublic, 1);
         wrapper.orderByDesc(Trip::getCreateTime);
         wrapper.last("LIMIT " + normalizeLimit(limit));
+        // 【数据库 SELECT】兜底：按时间查询公开行程
         return tripMapper.selectList(wrapper);
     }
 
@@ -278,6 +304,7 @@ public class RecommendServiceImpl implements RecommendService {
         wrapper.eq(Food::getStatus, 1);
         wrapper.orderByDesc(Food::getCreateTime);
         wrapper.last("LIMIT " + normalizeLimit(limit));
+        // 【数据库 SELECT】兜底：按时间查询美食
         return foodMapper.selectList(wrapper);
     }
 
@@ -287,8 +314,11 @@ public class RecommendServiceImpl implements RecommendService {
         wrapper.orderByDesc(Attraction::getCollectCount);
         wrapper.orderByDesc(Attraction::getCreateTime);
         wrapper.last("LIMIT " + normalizeLimit(limit));
+        // 【数据库 SELECT】兜底：按热度/时间查询景点
         return attractionMapper.selectList(wrapper);
     }
+
+    // ==================== 通用方法 ====================
 
     private <T> List<T> orderByIds(List<T> rows, List<Long> ids, Function<T, Long> idGetter) {
         Map<Long, T> map = rows.stream().collect(Collectors.toMap(idGetter, Function.identity(), (a, b) -> a));
@@ -323,6 +353,7 @@ public class RecommendServiceImpl implements RecommendService {
         return value instanceof Number number ? number.longValue() : null;
     }
 
+    // ---------- 构建单个足迹项 ----------
     private Map<String, Object> buildFootprintItem(UserBehavior behavior) {
         Map<String, Object> item = new HashMap<>();
         item.put("id", behavior.getId());
@@ -338,6 +369,7 @@ public class RecommendServiceImpl implements RecommendService {
         switch (behavior.getTargetType()) {
             case TARGET_TYPE_SCENIC -> {
                 typeName = "景区";
+                // 【数据库 SELECT】根据目标ID查询单个景区
                 ScenicArea scenic = scenicAreaMapper.selectById(behavior.getTargetId());
                 if (scenic != null) {
                     title = scenic.getName();
@@ -347,6 +379,7 @@ public class RecommendServiceImpl implements RecommendService {
             }
             case TARGET_TYPE_STRATEGY -> {
                 typeName = "攻略";
+                // 【数据库 SELECT】根据目标ID查询单个攻略
                 Strategy strategy = strategyMapper.selectById(behavior.getTargetId());
                 if (strategy != null) {
                     title = strategy.getTitle();
@@ -356,6 +389,7 @@ public class RecommendServiceImpl implements RecommendService {
             }
             case TARGET_TYPE_TRIP -> {
                 typeName = "行程";
+                // 【数据库 SELECT】根据目标ID查询单个行程
                 Trip trip = tripMapper.selectById(behavior.getTargetId());
                 if (trip != null) {
                     title = trip.getTitle();
@@ -365,6 +399,7 @@ public class RecommendServiceImpl implements RecommendService {
             }
             case TARGET_TYPE_FOOD -> {
                 typeName = "美食";
+                // 【数据库 SELECT】根据目标ID查询单个美食
                 Food food = foodMapper.selectById(behavior.getTargetId());
                 if (food != null) {
                     title = food.getName();
@@ -374,6 +409,7 @@ public class RecommendServiceImpl implements RecommendService {
             }
             case TARGET_TYPE_ATTRACTION -> {
                 typeName = "景点";
+                // 【数据库 SELECT】根据目标ID查询单个景点
                 Attraction attraction = attractionMapper.selectById(behavior.getTargetId());
                 if (attraction != null) {
                     title = attraction.getName();

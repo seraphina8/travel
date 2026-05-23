@@ -17,6 +17,7 @@ public interface AttractionMapper extends BaseMapper<Attraction> {
             "LEFT JOIN scenic_area s ON a.scenic_id = s.id WHERE a.id = #{id}")
     Attraction selectWithScenic(Long id);
 
+//    获取浏览量前 10 的热门景点。
     @Select("SELECT name, view_count AS viewCount FROM attraction ORDER BY view_count DESC LIMIT 10")
     List<Map<String, Object>> getHotAttractions();
 

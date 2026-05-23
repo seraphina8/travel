@@ -263,10 +263,6 @@ export default {
   saveTripDetails(tripId, details) {
     return api.post(`/trip/${tripId}/details`, details);
   },
-  // AI生成行程
-  aiGenerateTrip(params) {
-    return api.post("/ai/generate-trip", params);
-  },
   // 保存AI生成的行程
   saveAiTripDetails(tripId, details) {
     return api.post(`/trip/${tripId}/ai-details`, details);

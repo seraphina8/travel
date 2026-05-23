@@ -87,46 +87,4 @@ public class AiController {
         }
     }
 
-    // AI 行程规划
-    @PostMapping("/generate-trip")
-    public Result<String> generateTrip(@RequestBody Map<String, Object> params) {
-        try {
-            String destination = params.get("destination").toString();
-            Integer days = Integer.parseInt(params.get("days").toString());
-            String style = params.get("style").toString();
-
-            String prompt = String.format("""
-            生成【%s】%s天旅行攻略，风格：%s。
-            严格按以下格式输出，不要任何多余内容：
-
-            第1天
-            上午：景点、美食、交通
-            中午：美食、餐厅
-            下午：景点、活动
-            晚上：美食、住宿
-
-            第2天
-            上午：景点、美食、交通
-            中午：美食、餐厅
-            下午：景点、活动
-            晚上：美食、住宿
-
-            第3天
-            上午：景点、美食、交通
-            中午：美食、餐厅
-            下午：景点、活动
-            晚上：美食、伴手礼
-
-            规则：
-            1. 只输出行程，不要任何解释
-            2. 不要格式、不要emoji、不要符号
-            3. 内容不重复
-            """, destination, days, style);
-
-            return chat(Map.of("message", prompt, "history", List.of()));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Result.error("行程规划失败");
-        }
-    }
 }

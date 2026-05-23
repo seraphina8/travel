@@ -500,9 +500,8 @@ const loadData = async () => {
       requests.push(api.getRecommendScenics(4));
     }
 
-    const [scenicRes, strategyRes, bannerRes, recommendRes] = await Promise.all(
-      requests,
-    );
+    const [scenicRes, strategyRes, bannerRes, recommendRes] =
+      await Promise.all(requests);
     if (scenicRes.code === 200) {
       hotScenics.value = scenicRes.data.records;
     }

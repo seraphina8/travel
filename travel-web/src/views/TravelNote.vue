@@ -4,40 +4,54 @@
       <nav aria-label="breadcrumb" class="mb-2">
         <ol class="breadcrumb breadcrumb-custom">
           <li class="breadcrumb-item">
-            <router-link to="/"><i class="bi bi-house-door"></i> 首页</router-link>
+            <router-link to="/"
+              ><i class="bi bi-house-door"></i> 首页</router-link
+            >
           </li>
           <li class="breadcrumb-item active">
             <i class="bi bi-journal-text"></i> 游记打卡
           </li>
         </ol>
       </nav>
-      <h1 class="h3 fw-bold mb-1"><i class="bi bi-journal-text me-2"></i>游记打卡</h1>
+      <h1 class="h3 fw-bold mb-1">
+        <i class="bi bi-journal-text me-2"></i>游记打卡
+      </h1>
       <p class="text-white-50 mb-0 small">分享你的旅行故事</p>
     </div>
   </div>
-  
+
   <div class="container py-4">
     <!-- 顶部操作栏 -->
     <div class="action-bar">
       <div class="action-left">
         <h5 class="action-title">最新游记</h5>
-        <select class="province-select" v-model="filterProvince" @change="loadNotes">
+        <select
+          class="province-select"
+          v-model="filterProvince"
+          @change="loadNotes"
+        >
           <option value="">全部省份</option>
           <option v-for="p in provinces" :key="p" :value="p">{{ p }}</option>
         </select>
         <select class="province-select" v-model="filterTag" @change="loadNotes">
           <option value="">全部标签</option>
-          <option v-for="tag in tags" :key="tag.id" :value="tag.name">{{ tag.name }}</option>
+          <option v-for="tag in tags" :key="tag.id" :value="tag.name">
+            {{ tag.name }}
+          </option>
         </select>
       </div>
-      <router-link class="publish-btn" :to="{ name: 'TravelNoteCreate' }" v-if="isLoggedIn">
+      <router-link
+        class="publish-btn"
+        :to="{ name: 'TravelNoteCreate' }"
+        v-if="isLoggedIn"
+      >
         <i class="bi bi-plus-lg"></i> 发布游记
       </router-link>
       <router-link to="/login" class="login-btn" v-else>
         <i class="bi bi-box-arrow-in-right"></i> 登录后发布
       </router-link>
     </div>
-    
+
     <div class="row g-4">
       <!-- 左侧：中国地图 -->
       <div class="col-lg-5">
@@ -45,20 +59,27 @@
           <h5 class="map-title"><i class="bi bi-map"></i> 我去过的省份</h5>
           <div id="chinaMap" class="map-container"></div>
           <div class="map-stats">
-            <span class="stats-badge">已打卡 {{ visitedProvinces.length }} 个省份</span>
+            <span class="stats-badge"
+              >已打卡 {{ visitedProvinces.length }} 个省份</span
+            >
           </div>
         </div>
       </div>
-      
+
       <!-- 右侧：游记列表 -->
       <div class="col-lg-7">
         <div class="note-list">
           <div class="note-card" v-for="note in notes" :key="note.id">
             <div class="note-header-info">
-              <img :src="note.userAvatar || getAvatar(note.userId)" class="avatar">
+              <img
+                :src="note.userAvatar || getAvatar(note.userId)"
+                class="avatar"
+              />
               <div class="user-info">
-                <h6 class="user-name">{{ note.username || '旅行者' }}</h6>
-                <small class="note-time">{{ formatTime(note.createTime) }}</small>
+                <h6 class="user-name">{{ note.username || "旅行者" }}</h6>
+                <small class="note-time">{{
+                  formatTime(note.createTime)
+                }}</small>
               </div>
               <span class="province-tag">{{ note.province }}</span>
             </div>
@@ -74,7 +95,7 @@
               </button>
             </div>
           </div>
-          
+
           <div class="empty-notes" v-if="notes.length === 0">
             <i class="bi bi-journal-x"></i>
             <p>暂无游记</p>
@@ -83,27 +104,43 @@
       </div>
     </div>
   </div>
-  
+
   <!-- 发布游记弹窗 -->
   <div class="modal fade" id="noteModal" tabindex="-1" ref="modalRef">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">发布游记</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+          ></button>
         </div>
         <div class="modal-body">
           <form @submit.prevent="submitNote">
             <div class="form-row">
               <div class="form-group half">
                 <label class="form-label">游记标题 *</label>
-                <input type="text" class="form-control" v-model="noteForm.title" placeholder="给你的游记起个标题" required>
+                <input
+                  type="text"
+                  class="form-control"
+                  v-model="noteForm.title"
+                  placeholder="给你的游记起个标题"
+                  required
+                />
               </div>
               <div class="form-group half">
                 <label class="form-label">打卡省份 *</label>
-                <select class="form-control" v-model="noteForm.province" required>
+                <select
+                  class="form-control"
+                  v-model="noteForm.province"
+                  required
+                >
                   <option value="">选择省份</option>
-                  <option v-for="p in provinces" :key="p" :value="p">{{ p }}</option>
+                  <option v-for="p in provinces" :key="p" :value="p">
+                    {{ p }}
+                  </option>
                 </select>
               </div>
             </div>
@@ -121,47 +158,103 @@
                   {{ tag.name }}
                 </button>
               </div>
-              <input type="text" class="form-control mt-2" v-model="customNoteTags" placeholder="也可以手动输入，多个标签用英文逗号分隔">
+              <input
+                type="text"
+                class="form-control mt-2"
+                v-model="customNoteTags"
+                placeholder="也可以手动输入，多个标签用英文逗号分隔"
+              />
             </div>
             <div class="form-group full">
               <label class="form-label">游记内容 *</label>
               <div class="editor-toolbar">
-                <button type="button" class="toolbar-btn" @click="formatText('bold')" title="加粗">
+                <button
+                  type="button"
+                  class="toolbar-btn"
+                  @click="formatText('bold')"
+                  title="加粗"
+                >
                   <i class="bi bi-type-bold"></i>
                 </button>
-                <button type="button" class="toolbar-btn" @click="formatText('italic')" title="斜体">
+                <button
+                  type="button"
+                  class="toolbar-btn"
+                  @click="formatText('italic')"
+                  title="斜体"
+                >
                   <i class="bi bi-type-italic"></i>
                 </button>
-                <button type="button" class="toolbar-btn" @click="formatText('underline')" title="下划线">
+                <button
+                  type="button"
+                  class="toolbar-btn"
+                  @click="formatText('underline')"
+                  title="下划线"
+                >
                   <i class="bi bi-type-underline"></i>
                 </button>
                 <span class="toolbar-divider"></span>
-                <button type="button" class="toolbar-btn" @click="formatText('insertUnorderedList')" title="无序列表">
+                <button
+                  type="button"
+                  class="toolbar-btn"
+                  @click="formatText('insertUnorderedList')"
+                  title="无序列表"
+                >
                   <i class="bi bi-list-ul"></i>
                 </button>
-                <button type="button" class="toolbar-btn" @click="formatText('insertOrderedList')" title="有序列表">
+                <button
+                  type="button"
+                  class="toolbar-btn"
+                  @click="formatText('insertOrderedList')"
+                  title="有序列表"
+                >
                   <i class="bi bi-list-ol"></i>
                 </button>
                 <span class="toolbar-divider"></span>
-                <button type="button" class="toolbar-btn" @click="formatText('justifyLeft')" title="左对齐">
+                <button
+                  type="button"
+                  class="toolbar-btn"
+                  @click="formatText('justifyLeft')"
+                  title="左对齐"
+                >
                   <i class="bi bi-text-left"></i>
                 </button>
-                <button type="button" class="toolbar-btn" @click="formatText('justifyCenter')" title="居中">
+                <button
+                  type="button"
+                  class="toolbar-btn"
+                  @click="formatText('justifyCenter')"
+                  title="居中"
+                >
                   <i class="bi bi-text-center"></i>
                 </button>
-                <button type="button" class="toolbar-btn" @click="formatText('justifyRight')" title="右对齐">
+                <button
+                  type="button"
+                  class="toolbar-btn"
+                  @click="formatText('justifyRight')"
+                  title="右对齐"
+                >
                   <i class="bi bi-text-right"></i>
                 </button>
                 <span class="toolbar-divider"></span>
-                <button type="button" class="toolbar-btn" @click="triggerImageUpload" title="插入图片">
+                <button
+                  type="button"
+                  class="toolbar-btn"
+                  @click="triggerImageUpload"
+                  title="插入图片"
+                >
                   <i class="bi bi-image"></i>
                 </button>
-                <input type="file" ref="imageInputRef" accept="image/*" @change="handleImageSelect" style="display: none;">
+                <input
+                  type="file"
+                  ref="imageInputRef"
+                  accept="image/*"
+                  @change="handleImageSelect"
+                  style="display: none"
+                />
               </div>
-              <div 
+              <div
                 ref="editorRef"
-                class="rich-editor" 
-                contenteditable="true" 
+                class="rich-editor"
+                contenteditable="true"
                 @input="onEditorInput"
                 @paste="onEditorPaste"
                 placeholder="分享你的旅行故事..."
@@ -170,9 +263,18 @@
           </form>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn-cancel" data-bs-dismiss="modal">取消</button>
-          <button type="button" class="btn-submit" @click="submitNote" :disabled="submitting">
-            <span v-if="submitting"><i class="bi bi-arrow-repeat spin"></i> 发布中...</span>
+          <button type="button" class="btn-cancel" data-bs-dismiss="modal">
+            取消
+          </button>
+          <button
+            type="button"
+            class="btn-submit"
+            @click="submitNote"
+            :disabled="submitting"
+          >
+            <span v-if="submitting"
+              ><i class="bi bi-arrow-repeat spin"></i> 发布中...</span
+            >
             <span v-else><i class="bi bi-send"></i> 发布游记</span>
           </button>
         </div>
@@ -182,311 +284,389 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
-import { Modal } from 'bootstrap'
-import * as echarts from 'echarts'
-import api from '../api'
+import { ref, computed, onMounted, nextTick } from "vue";
+import { Modal } from "bootstrap";
+import * as echarts from "echarts";
+import api from "../api";
 
-const isLoggedIn = computed(() => !!localStorage.getItem('userToken'))
-const notes = ref([])
-const visitedProvinces = ref([])
-const filterProvince = ref('')
-const filterTag = ref('')
-const tags = ref([])
-const selectedNoteTags = ref([])
-const customNoteTags = ref('')
-const submitting = ref(false)
-const modalRef = ref(null)
-const editorRef = ref(null)
-const imageInputRef = ref(null)
-let noteModal = null
+const isLoggedIn = computed(() => !!localStorage.getItem("userToken"));
+const notes = ref([]);
+const visitedProvinces = ref([]);
+const filterProvince = ref("");
+const filterTag = ref("");
+const tags = ref([]);
+const selectedNoteTags = ref([]);
+const customNoteTags = ref("");
+const submitting = ref(false);
+const modalRef = ref(null);
+const editorRef = ref(null);
+const imageInputRef = ref(null);
+let noteModal = null;
 
 const noteForm = ref({
-  title: '',
-  province: '',
-  tags: '',
-  content: ''
-})
+  title: "",
+  province: "",
+  tags: "",
+  content: "",
+});
 
 const mergedNoteTags = computed(() => {
   const manual = customNoteTags.value
-    .split(',')
-    .map(item => item.trim())
-    .filter(Boolean)
-  return Array.from(new Set([...selectedNoteTags.value, ...manual])).join(',')
-})
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  return Array.from(new Set([...selectedNoteTags.value, ...manual])).join(",");
+});
 
 const provinces = [
-  '北京', '天津', '河北', '山西', '内蒙古', '辽宁', '吉林', '黑龙江',
-  '上海', '江苏', '浙江', '安徽', '福建', '江西', '山东', '河南',
-  '湖北', '湖南', '广东', '广西', '海南', '重庆', '四川', '贵州',
-  '云南', '西藏', '陕西', '甘肃', '青海', '宁夏', '新疆', '台湾',
-  '香港', '澳门'
-]
+  "北京",
+  "天津",
+  "河北",
+  "山西",
+  "内蒙古",
+  "辽宁",
+  "吉林",
+  "黑龙江",
+  "上海",
+  "江苏",
+  "浙江",
+  "安徽",
+  "福建",
+  "江西",
+  "山东",
+  "河南",
+  "湖北",
+  "湖南",
+  "广东",
+  "广西",
+  "海南",
+  "重庆",
+  "四川",
+  "贵州",
+  "云南",
+  "西藏",
+  "陕西",
+  "甘肃",
+  "青海",
+  "宁夏",
+  "新疆",
+  "台湾",
+  "香港",
+  "澳门",
+];
 
-const getAvatar = (id) => `https://api.dicebear.com/7.x/avataaars/svg?seed=${id}`
+const getAvatar = (id) =>
+  `https://api.dicebear.com/7.x/avataaars/svg?seed=${id}`;
 
 const getTextContent = (html) => {
-  if (!html) return ''
-  const div = document.createElement('div')
-  div.innerHTML = html
-  const text = div.textContent || div.innerText || ''
-  return text.length > 100 ? text.substring(0, 100) + '...' : text
-}
+  if (!html) return "";
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  const text = div.textContent || div.innerText || "";
+  return text.length > 100 ? text.substring(0, 100) + "..." : text;
+};
 
 const formatTime = (time) => {
-  if (!time) return ''
-  return new Date(time).toLocaleDateString('zh-CN')
-}
+  if (!time) return "";
+  return new Date(time).toLocaleDateString("zh-CN");
+};
 
 const loadNotes = async () => {
   try {
     const res = await api.getTravelNotes({
       province: filterProvince.value || undefined,
-      tag: filterTag.value || undefined
-    })
+      tag: filterTag.value || undefined,
+    });
     if (res.code === 200) {
-      notes.value = res.data.records || []
+      notes.value = res.data.records || [];
     }
   } catch (e) {
-    console.error('加载游记失败', e)
+    console.error("加载游记失败", e);
   }
-}
+};
 
 const loadTags = async () => {
-  const res = await api.getTagList(5)
+  const res = await api.getTagList(5);
   if (res.code === 200) {
-    tags.value = res.data || []
+    tags.value = res.data || [];
   }
-}
+};
 
 const toggleNoteTag = (name) => {
   if (selectedNoteTags.value.includes(name)) {
-    selectedNoteTags.value = selectedNoteTags.value.filter(item => item !== name)
+    selectedNoteTags.value = selectedNoteTags.value.filter(
+      (item) => item !== name,
+    );
   } else {
-    selectedNoteTags.value.push(name)
+    selectedNoteTags.value.push(name);
   }
-}
+};
 
 const loadFootprint = async () => {
-  if (!isLoggedIn.value) return
+  if (!isLoggedIn.value) return;
   try {
-    const res = await api.getFootprint()
+    const res = await api.getFootprint();
     if (res.code === 200) {
-      visitedProvinces.value = res.data || []
-      initMap()
+      // visitedProvinces 里保存的是用户已经打卡过的省份
+      visitedProvinces.value = res.data || [];
+      initMap();
     }
   } catch (e) {
-    console.error('加载足迹失败', e)
+    console.error("加载足迹失败", e);
   }
-}
+};
 
+// 把地图里的每个省份都遍历一遍，判断它是否在 visitedProvinces 里面
 const initMap = async () => {
-  const mapContainer = document.getElementById('chinaMap')
-  if (!mapContainer) return
-  
+  const mapContainer = document.getElementById("chinaMap");
+  if (!mapContainer) return;
+
   try {
-    let chinaJson
+    let chinaJson;
     try {
-      chinaJson = await fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json').then(r => {
-        if (!r.ok) throw new Error('Network error')
-        return r.json()
-      })
+      chinaJson = await fetch(
+        "https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json",
+      ).then((r) => {
+        if (!r.ok) throw new Error("Network error");
+        return r.json();
+      });
     } catch (fetchErr) {
-      console.warn('远程地图数据加载失败，使用简化版地图', fetchErr)
-      const { default: simpleChinaJson } = await import('../assets/china-simple.json')
-      chinaJson = simpleChinaJson
+      console.warn("远程地图数据加载失败，使用简化版地图", fetchErr);
+      const { default: simpleChinaJson } =
+        await import("../assets/china-simple.json");
+      chinaJson = simpleChinaJson;
     }
-    echarts.registerMap('china', chinaJson)
-    
-    const chart = echarts.init(mapContainer)
-    
+    echarts.registerMap("china", chinaJson);
+
+    const chart = echarts.init(mapContainer);
+
     const provinceNameMap = {
-      '北京': '北京市', '天津': '天津市', '河北': '河北省', '山西': '山西省',
-      '内蒙古': '内蒙古自治区', '辽宁': '辽宁省', '吉林': '吉林省', '黑龙江': '黑龙江省',
-      '上海': '上海市', '江苏': '江苏省', '浙江': '浙江省', '安徽': '安徽省',
-      '福建': '福建省', '江西': '江西省', '山东': '山东省', '河南': '河南省',
-      '湖北': '湖北省', '湖南': '湖南省', '广东': '广东省', '广西': '广西壮族自治区',
-      '海南': '海南省', '重庆': '重庆市', '四川': '四川省', '贵州': '贵州省',
-      '云南': '云南省', '西藏': '西藏自治区', '陕西': '陕西省', '甘肃': '甘肃省',
-      '青海': '青海省', '宁夏': '宁夏回族自治区', '新疆': '新疆维吾尔自治区',
-      '台湾': '台湾省', '香港': '香港特别行政区', '澳门': '澳门特别行政区'
-    }
-    
-    const mapProvinceNames = chinaJson.features.map(f => f.properties.name)
-    
-    const data = mapProvinceNames.map(mapName => {
-      const isVisited = visitedProvinces.value.some(v => {
-        return v === mapName || 
-               provinceNameMap[v] === mapName || 
-               Object.entries(provinceNameMap).find(([k, val]) => val === mapName)?.[0] === v
-      })
+      北京: "北京市",
+      天津: "天津市",
+      河北: "河北省",
+      山西: "山西省",
+      内蒙古: "内蒙古自治区",
+      辽宁: "辽宁省",
+      吉林: "吉林省",
+      黑龙江: "黑龙江省",
+      上海: "上海市",
+      江苏: "江苏省",
+      浙江: "浙江省",
+      安徽: "安徽省",
+      福建: "福建省",
+      江西: "江西省",
+      山东: "山东省",
+      河南: "河南省",
+      湖北: "湖北省",
+      湖南: "湖南省",
+      广东: "广东省",
+      广西: "广西壮族自治区",
+      海南: "海南省",
+      重庆: "重庆市",
+      四川: "四川省",
+      贵州: "贵州省",
+      云南: "云南省",
+      西藏: "西藏自治区",
+      陕西: "陕西省",
+      甘肃: "甘肃省",
+      青海: "青海省",
+      宁夏: "宁夏回族自治区",
+      新疆: "新疆维吾尔自治区",
+      台湾: "台湾省",
+      香港: "香港特别行政区",
+      澳门: "澳门特别行政区",
+    };
+
+    const mapProvinceNames = chinaJson.features.map((f) => f.properties.name);
+
+    const data = mapProvinceNames.map((mapName) => {
+      const isVisited = visitedProvinces.value.some((v) => {
+        return (
+          v === mapName ||
+          provinceNameMap[v] === mapName ||
+          Object.entries(provinceNameMap).find(
+            ([k, val]) => val === mapName,
+          )?.[0] === v
+        );
+      });
       return {
         name: mapName,
-        value: isVisited ? 1 : 0
-      }
-    })
-    
+        value: isVisited ? 1 : 0,
+      };
+    });
+
     chart.setOption({
       tooltip: {
-        trigger: 'item',
+        trigger: "item",
         formatter: (params) => {
-          return params.name + (params.value ? ' ✓ 已打卡' : '')
-        }
+          return params.name + (params.value ? " ✓ 已打卡" : "");
+        },
       },
+      // 点亮变蓝
       visualMap: {
         show: false,
         min: 0,
         max: 1,
         inRange: {
-          color: ['#e5e7eb', '#5a9bcf']
-        }
+          color: ["#e5e7eb", "#5a9bcf"],
+        },
       },
-      series: [{
-        type: 'map',
-        map: 'china',
-        roam: true,
-        label: {
-          show: true,
-          fontSize: 8,
-          color: '#666'
+      series: [
+        {
+          type: "map",
+          map: "china",
+          roam: true,
+          label: {
+            show: true,
+            fontSize: 8,
+            color: "#666",
+          },
+          // 鼠标悬停变色
+          emphasis: {
+            label: { show: true, fontSize: 12 },
+            itemStyle: { areaColor: "#4a8bbf" },
+          },
+          data: data,
         },
-        emphasis: {
-          label: { show: true, fontSize: 12 },
-          itemStyle: { areaColor: '#4a8bbf' }
-        },
-        data: data
-      }]
-    })
-    
-    window.addEventListener('resize', () => chart.resize())
+      ],
+    });
+
+    window.addEventListener("resize", () => chart.resize());
   } catch (e) {
-    console.error('地图加载失败', e)
+    console.error("地图加载失败", e);
   }
-}
+};
 
 const openNoteModal = () => {
   if (!noteModal) {
-    noteModal = new Modal(modalRef.value)
+    noteModal = new Modal(modalRef.value);
   }
-  noteForm.value = { title: '', province: '', tags: '', content: '' }
-  selectedNoteTags.value = []
-  customNoteTags.value = ''
-  noteModal.show()
+  noteForm.value = { title: "", province: "", tags: "", content: "" };
+  selectedNoteTags.value = [];
+  customNoteTags.value = "";
+  noteModal.show();
   nextTick(() => {
     if (editorRef.value) {
-      editorRef.value.innerHTML = ''
+      editorRef.value.innerHTML = "";
     }
-  })
-}
+  });
+};
 
 const formatText = (command) => {
-  document.execCommand(command, false, null)
-  editorRef.value?.focus()
-}
+  document.execCommand(command, false, null);
+  editorRef.value?.focus();
+};
 
 const onEditorInput = () => {
-  noteForm.value.content = editorRef.value?.innerHTML || ''
-}
+  noteForm.value.content = editorRef.value?.innerHTML || "";
+};
 
 const onEditorPaste = async (e) => {
-  const items = e.clipboardData?.items
-  if (!items) return
-  
+  const items = e.clipboardData?.items;
+  if (!items) return;
+
   for (let i = 0; i < items.length; i++) {
-    if (items[i].type.indexOf('image') !== -1) {
-      e.preventDefault()
-      const file = items[i].getAsFile()
+    if (items[i].type.indexOf("image") !== -1) {
+      e.preventDefault();
+      const file = items[i].getAsFile();
       if (file) {
-        await uploadAndInsertImage(file)
+        await uploadAndInsertImage(file);
       }
-      return
+      return;
     }
   }
-  
-  e.preventDefault()
-  const text = e.clipboardData.getData('text/plain')
-  document.execCommand('insertText', false, text)
-}
+
+  e.preventDefault();
+  const text = e.clipboardData.getData("text/plain");
+  document.execCommand("insertText", false, text);
+};
 
 const uploadAndInsertImage = async (file) => {
   try {
-    const res = await api.uploadFile(file)
+    const res = await api.uploadFile(file);
     if (res.code === 200) {
-      const imgUrl = res.data
-      document.execCommand('insertHTML', false, `<img src="${imgUrl}" style="max-width: 100%; margin: 10px 0;">`)
-      onEditorInput()
+      const imgUrl = res.data;
+      document.execCommand(
+        "insertHTML",
+        false,
+        `<img src="${imgUrl}" style="max-width: 100%; margin: 10px 0;">`,
+      );
+      onEditorInput();
     } else {
-      alert('图片上传失败: ' + res.message)
+      alert("图片上传失败: " + res.message);
     }
   } catch (err) {
-    alert('图片上传失败')
+    alert("图片上传失败");
   }
-}
+};
 
 const triggerImageUpload = () => {
-  imageInputRef.value?.click()
-}
+  imageInputRef.value?.click();
+};
 
 const handleImageSelect = async (e) => {
-  const file = e.target.files[0]
+  const file = e.target.files[0];
   if (file) {
-    await uploadAndInsertImage(file)
+    await uploadAndInsertImage(file);
   }
-  e.target.value = ''
-}
+  e.target.value = "";
+};
 
 const submitNote = async () => {
-  if (!noteForm.value.title || !noteForm.value.province || !noteForm.value.content) {
-    alert('请填写完整信息')
-    return
+  if (
+    !noteForm.value.title ||
+    !noteForm.value.province ||
+    !noteForm.value.content
+  ) {
+    alert("请填写完整信息");
+    return;
   }
-  
-  submitting.value = true
+
+  submitting.value = true;
   try {
     const res = await api.createTravelNote({
       ...noteForm.value,
-      tags: mergedNoteTags.value
-    })
+      tags: mergedNoteTags.value,
+    });
     if (res.code === 200) {
-      alert('发布成功！')
-      noteForm.value = { title: '', province: '', tags: '', content: '' }
-      selectedNoteTags.value = []
-      customNoteTags.value = ''
+      alert("发布成功！");
+      noteForm.value = { title: "", province: "", tags: "", content: "" };
+      selectedNoteTags.value = [];
+      customNoteTags.value = "";
       if (editorRef.value) {
-        editorRef.value.innerHTML = ''
+        editorRef.value.innerHTML = "";
       }
-      noteModal?.hide()
-      loadNotes()
-      loadFootprint()
+      noteModal?.hide();
+      loadNotes();
+      loadFootprint();
     } else {
-      alert(res.message)
+      alert(res.message);
     }
   } catch (e) {
-    alert('发布失败')
+    alert("发布失败");
   } finally {
-    submitting.value = false
+    submitting.value = false;
   }
-}
+};
 
 const shareNote = (note) => {
-  const url = window.location.origin + '/note/' + note.id
+  const url = window.location.origin + "/note/" + note.id;
   if (navigator.share) {
-    navigator.share({ title: note.title, url })
+    navigator.share({ title: note.title, url });
   } else {
-    navigator.clipboard.writeText(url)
-    alert('链接已复制到剪贴板')
+    navigator.clipboard.writeText(url);
+    alert("链接已复制到剪贴板");
   }
-}
+};
 
 onMounted(() => {
-  loadTags()
-  loadNotes()
-  loadFootprint()
+  loadTags();
+  loadNotes();
+  loadFootprint();
   if (!isLoggedIn.value) {
-    initMap()
+    initMap();
   }
-})
+});
 </script>
 
 <style scoped>
@@ -900,8 +1080,12 @@ onMounted(() => {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .spin {
@@ -914,20 +1098,20 @@ onMounted(() => {
   .note-header {
     padding: 30px 0;
   }
-  
+
   .form-row {
     flex-direction: column;
   }
-  
+
   .action-bar {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .action-left {
     justify-content: space-between;
   }
-  
+
   .publish-btn,
   .login-btn {
     text-align: center;

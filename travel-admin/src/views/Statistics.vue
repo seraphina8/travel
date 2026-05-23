@@ -203,6 +203,7 @@ const initOrderChart = async () => {
   orderChart = echarts.init(orderChartRef.value);
 
   orderChart.setOption({
+    color: ["#f59e0b", "#2563eb", "#22c55e", "#ef4444"],
     tooltip: {
       trigger: "item",
     },
